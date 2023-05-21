@@ -12,7 +12,7 @@ fn main() {
 
     input.seek(SeekFrom::Start(offset)).expect("无法设置偏移量！");
 
-    let mut buffer = [0;1024];
+    let mut buffer = [0;4096];
     loop {
         let bytes_read = input.read(&mut buffer).expect("文件读取失败！");
         if bytes_read == 0 { break; }
