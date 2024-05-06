@@ -1,13 +1,15 @@
 [package]
 name = "rmb"
-version = "0.1.1"
+version = "0.2.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 
-[profile.release]
+[profile.dist]
+inherits = "release"
 lto = true
 debug = false
 strip = true
+opt-level = 1

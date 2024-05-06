@@ -1,9 +1,9 @@
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 
-static VERSION: &str = "0.2.0";
+static VERSION: &str = "0.2.1";
 static LONG_HELP: &str = r#"remove bytes (rmb)
-version v0.2.0
+version v0.2.1
 
 Usage:
   rmb <OFFSET> <INPUT> <OUTPUT>
@@ -18,7 +18,13 @@ Usage:
     Show version
 "#;
 
-fn main() -> Result<(), &'static str> {
+fn main() {
+    if let Err(error) = run_command() {
+        eprintln!("error: {error}");
+    }
+}
+
+fn run_command() -> Result<(), &'static str> {
     let mut args = std::env::args().skip(1);
 
     if let Some(offset) = args.next() {
