@@ -1,9 +1,9 @@
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 
-static VERSION: &str = "0.2.1";
+static VERSION: &str = "0.2.2";
 static LONG_HELP: &str = r#"remove bytes (rmb)
-version v0.2.1
+version v0.2.2
 
 Usage:
   rmb <OFFSET> <INPUT> <OUTPUT>
@@ -20,47 +20,41 @@ Usage:
 
 fn main() {
     if let Err(error) = run_command() {
-        eprintln!("error: {error}");
+        eprintln!("error: {}", error);
     }
 }
 
 fn run_command() -> Result<(), &'static str> {
     let mut args = std::env::args().skip(1);
 
-    if let Some(offset) = args.next() {
-        match offset.to_lowercase().as_str() {
-            "help" | "h" => print_help(),
-            "version" | "v" => print_version(),
-            offset => {
-                let seek = make_seek(offset)?;
-                if let Some(input) = args.next() {
-                    if let Some(output) = args.next() {
-                        if input.eq_ignore_ascii_case(&output) {
-                            return Err("Output cannot be the same as input");
-                        }
+    let offset = args.next().ok_or("Need a subcommnd")?;
 
-                        rmb(seek, &input, &output)?;
-                    } else {
-                        return Err("No output");
-                    }
-                } else {
-                    return Err("No input");
-                }
+    match offset.to_lowercase().as_str() {
+        "help" | "h" => print_help(),
+        "version" | "v" => print_version(),
+        offset => {
+            let seek = make_seek(offset)?;
+            let input = args.next().ok_or("No input")?;
+            let output = args.next().ok_or("No output")?;
+
+            if input.eq_ignore_ascii_case(&output) {
+                return Err("Output cannot be the same as input");
             }
+            drop(args);
+
+            rmb(seek, &input, &output)?;
         }
-    } else {
-        return Err("Need a subcommnd");
     }
 
     Ok(())
 }
 
 fn print_help() {
-    println!("{LONG_HELP}")
+    println!("{}", LONG_HELP);
 }
 
 fn print_version() {
-    println!("rmb v{VERSION}");
+    println!("rmb v{}", VERSION);
 }
 
 fn make_seek(offset: &str) -> Result<SeekFrom, &'static str> {
@@ -77,30 +71,24 @@ fn make_seek(offset: &str) -> Result<SeekFrom, &'static str> {
 }
 
 fn rmb(seek: SeekFrom, input: &str, output: &str) -> Result<(), &'static str> {
-    if let Ok(mut inputs) = File::open(input) {
-        if let Ok(mut outputs) = File::create(output) {
-            if inputs.seek(seek).is_err() {
-                return Err("Failed set offset");
-            }
-
-            let mut buffer = [0; 4096];
-            'main: loop {
-                if let Ok(bytes_read) = inputs.read(&mut buffer) {
-                    if bytes_read == 0 {
-                        break 'main;
-                    }
-                    if outputs.write_all(&buffer[..bytes_read]).is_err() {
-                        return Err("Failed write to output");
-                    }
-                } else {
-                    return Err("Failed read from input");
-                }
-            }
-        } else {
-            return Err("Failed open output");
-        }
-    } else {
-        return Err("Failed open input");
+    let mut inputs = File::open(input).or(Err("Failed open input"))?;
+    if inputs.seek(seek).is_err() {
+        return Err("Failed set offset");
     }
+
+    let mut outputs = File::create(output).or(Err("Failed create output"))?;
+
+    let mut buffer = [0; 4096];
+    loop {
+        let bytes_read = inputs.read(&mut buffer).or(Err("Failed read from input"))?;
+
+        if bytes_read == 0 {
+            break;
+        }
+        if outputs.write_all(&buffer[..bytes_read]).is_err() {
+            return Err("Failed write to output");
+        }
+    }
+
     Ok(())
 }
