@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "rmb"
-version = "0.2.2"
+name = "remove_bytes"
+version = "0.2.3"

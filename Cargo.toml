@@ -1,15 +1,10 @@
 [package]
-name = "rmb"
-version = "0.2.2"
+name = "remove_bytes"
+version = "0.2.3"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "rmb"
+path = "src/rmb.rs"
 
 [dependencies]
-
-[profile.dist]
-inherits = "release"
-lto = true
-debug = false
-strip = true
-opt-level = 3
